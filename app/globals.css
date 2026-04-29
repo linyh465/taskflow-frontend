@@ -1,3 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --border: #E8E4DC;
+  --text: #1C1A17;
+  --muted: #8C8680;
+  --accent: #C45C3A;
+  --accent-soft: #F5EDEA;
+  --doing: #4A6741;
+  --radius: 2px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif { font-family: 'Lora', Georgia, serif; }
+.font-mono  { font-family: 'DM Mono', monospace; }
