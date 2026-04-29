@@ -15,45 +15,58 @@ export default function RegisterPage() {
   const { mutate: register, isPending } = useMutation({
     mutationFn: () => registerUser({ email, password }),
     onSuccess: (data) => {
-      if (data.userId) router.push('/login?registered=1');
+      if (data.userId) router.push('/login?welcome=1');
       else setError(data.error || '註冊失敗');
     },
-    onError: () => setError('伺服器錯誤，請稍後再試'),
+    onError: () => setError('連線失敗'),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); setError('');
     if (password !== confirm) { setError('兩次密碼不一致'); return; }
-    if (password.length < 8) { setError('密碼至少需要 8 個字元'); return; }
+    if (password.length < 8) { setError('密碼至少 8 個字元'); return; }
     register();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-3">🚀</div>
-          <h1 className="text-2xl font-bold text-gray-900">建立帳號</h1>
-          <p className="text-gray-500 text-sm mt-1">開始管理你的任務</p>
+    <div style={{ background: '#F7F5F0', minHeight: '100vh' }}
+      className="flex items-center justify-center px-6">
+      <div className="w-full max-w-sm">
+
+        <div className="mb-12 text-center">
+          <p className="text-xs tracking-[0.25em] uppercase text-[#8C8680] mb-3 font-mono">TaskFlow</p>
+          <h1 className="font-serif text-3xl font-normal text-[#1C1A17] italic">
+            はじめまして
+          </h1>
+          <div className="mt-3 mx-auto w-8 h-px bg-[#C45C3A]" />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">密碼</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="最少 8 個字元"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">確認密碼</label>
-            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="再輸入一次密碼"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" /></div>
-          {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2.5">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {[
+            { label: '電子郵件', type: 'email', val: email, set: setEmail, ph: 'your@email.com' },
+            { label: '密碼', type: 'password', val: password, set: setPassword, ph: '至少 8 個字元' },
+            { label: '確認密碼', type: 'password', val: confirm, set: setConfirm, ph: '再輸入一次' },
+          ].map(({ label, type, val, set, ph }) => (
+            <div key={label}>
+              <label className="block text-xs tracking-widest uppercase text-[#8C8680] mb-2">{label}</label>
+              <input type={type} value={val} onChange={e => set(e.target.value)} required placeholder={ph}
+                style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
+                className="w-full px-4 py-3 text-sm text-[#1C1A17] placeholder-[#C8C4BC] focus:outline-none focus:border-[#C45C3A] transition-colors" />
+            </div>
+          ))}
+
+          {error && <p className="text-xs text-[#C45C3A] font-mono">{error}</p>}
+
           <button type="submit" disabled={isPending}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg text-sm transition disabled:opacity-60">
-            {isPending ? '建立中...' : '建立帳號'}
+            style={{ background: '#1C1A17', borderRadius: '2px' }}
+            className="w-full py-3 text-xs tracking-[0.2em] uppercase text-[#F7F5F0] hover:bg-[#C45C3A] transition-colors disabled:opacity-40 mt-2">
+            {isPending ? '建立中…' : '建立帳號'}
           </button>
         </form>
-        <p className="text-center text-sm text-gray-500 mt-6">
-          已有帳號？ <Link href="/login" className="text-indigo-600 font-medium hover:underline">直接登入</Link>
+
+        <p className="text-center text-xs text-[#8C8680] mt-10">
+          已有帳號？{' '}
+          <Link href="/login" className="text-[#C45C3A] underline underline-offset-2 hover:no-underline">登入</Link>
         </p>
       </div>
     </div>
