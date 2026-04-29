@@ -5,58 +5,108 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTasks, createTask, updateTask, deleteTask } from '@/lib/api';
 import { Task, Status, Priority } from '@/types';
 
-const STATUS_CONFIG = {
-  TODO:        { label: '未開始', dot: '#3A3A3A', bg: '#F7F5F0', border: '#E8E4DC' },
-  IN_PROGRESS: { label: '進行中', dot: '#4A6741', bg: '#F2F5F1', border: '#C8D4C6' },
-  DONE:        { label: '已完成', dot: '#8C8680', bg: '#F7F5F0', border: '#E8E4DC' },
+const STATUS_PILL = {
+  TODO:        { label: '未開始', color: 'rgba(142,142,147,0.15)', text: '#8e8e93', dot: '#8e8e93' },
+  IN_PROGRESS: { label: '進行中', color: 'rgba(0,122,255,0.1)',    text: '#007aff', dot: '#007aff' },
+  DONE:        { label: '已完成', color: 'rgba(52,199,89,0.12)',   text: '#34c759', dot: '#34c759' },
 };
 
-const PRIORITY_COLOR: Record<Priority, string> = {
-  LOW: '#8C8680', MEDIUM: '#C45C3A', HIGH: '#8B2020',
+const PRIORITY_BADGE = {
+  LOW:    { label: '低', color: 'rgba(142,142,147,0.12)', text: '#8e8e93' },
+  MEDIUM: { label: '中', color: 'rgba(255,159,10,0.12)',  text: '#ff9f0a' },
+  HIGH:   { label: '高', color: 'rgba(255,59,48,0.12)',   text: '#ff3b30' },
 };
 
 function TaskRow({ task, onEdit, onDelete, onStatusChange }: {
-  task: Task;
-  onEdit: (t: Task) => void;
-  onDelete: (id: string) => void;
+  task: Task; onEdit: (t: Task) => void; onDelete: (id: string) => void;
   onStatusChange: (id: string, status: Status) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
   const next: Record<Status, Status> = { TODO: 'IN_PROGRESS', IN_PROGRESS: 'DONE', DONE: 'TODO' };
-  const cfg = STATUS_CONFIG[task.status];
+  const pill = STATUS_PILL[task.status];
+  const badge = PRIORITY_BADGE[task.priority];
 
   return (
-    <div style={{ borderBottom: '1px solid #E8E4DC' }}
-      className="flex items-center gap-4 py-4 group hover:bg-white/60 transition-colors px-2 -mx-2">
-
-      {/* Status dot — click to advance */}
-      <button onClick={() => onStatusChange(task.id, next[task.status])}
-        className="flex-shrink-0 w-3 h-3 rounded-full border transition-all hover:scale-125"
-        style={{ background: task.status === 'TODO' ? 'transparent' : cfg.dot,
-                 borderColor: cfg.dot }} />
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '12px',
+        padding: '12px 16px',
+        background: hovered ? 'rgba(255,255,255,0.7)' : 'transparent',
+        borderRadius: '12px',
+        transition: 'background 0.15s',
+        cursor: 'default',
+      }}
+    >
+      {/* Status toggle circle */}
+      <button
+        onClick={() => onStatusChange(task.id, next[task.status])}
+        style={{
+          width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+          border: task.status === 'TODO' ? '1.5px solid rgba(142,142,147,0.5)' : 'none',
+          background: task.status === 'DONE' ? '#34c759' : task.status === 'IN_PROGRESS' ? '#007aff' : 'transparent',
+          cursor: 'pointer', transition: 'all 0.2s',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {task.status !== 'TODO' && (
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5L4.5 7.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+      </button>
 
       {/* Title */}
-      <span onClick={() => onEdit(task)}
-        className={`flex-1 text-sm cursor-pointer ${task.status === 'DONE' ? 'line-through text-[#8C8680]' : 'text-[#1C1A17]'}`}>
+      <span
+        onClick={() => onEdit(task)}
+        style={{
+          flex: 1, fontSize: '15px', cursor: 'pointer',
+          color: task.status === 'DONE' ? '#aeaeb2' : '#1d1d1f',
+          textDecoration: task.status === 'DONE' ? 'line-through' : 'none',
+          letterSpacing: '-0.1px',
+        }}
+      >
         {task.title}
       </span>
 
-      {/* Priority */}
-      <span className="text-xs font-mono hidden sm:block"
-        style={{ color: PRIORITY_COLOR[task.priority] }}>
-        {task.priority === 'HIGH' ? '高' : task.priority === 'MEDIUM' ? '中' : '低'}
+      {/* Priority badge */}
+      <span style={{
+        padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '500',
+        background: badge.color, color: badge.text, flexShrink: 0,
+      }}>
+        {badge.label}
+      </span>
+
+      {/* Status pill */}
+      <span style={{
+        padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '500',
+        background: pill.color, color: pill.text, flexShrink: 0, minWidth: '60px', textAlign: 'center',
+      }}>
+        {pill.label}
       </span>
 
       {/* Due date */}
       {task.dueDate && (
-        <span className="text-xs text-[#8C8680] font-mono hidden md:block">
-          {new Date(task.dueDate).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })}
+        <span style={{ fontSize: '12px', color: '#aeaeb2', flexShrink: 0, minWidth: '48px', textAlign: 'right' }}>
+          {new Date(task.dueDate).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
         </span>
       )}
 
       {/* Delete */}
-      <button onClick={() => onDelete(task.id)}
-        className="opacity-0 group-hover:opacity-100 text-xs text-[#8C8680] hover:text-[#C45C3A] transition-all font-mono">
-        ✕
+      <button
+        onClick={() => onDelete(task.id)}
+        style={{
+          width: '24px', height: '24px', borderRadius: '50%',
+          background: hovered ? 'rgba(255,59,48,0.1)' : 'transparent',
+          border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: hovered ? 1 : 0, transition: 'all 0.15s', flexShrink: 0,
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M1 1L9 9M9 1L1 9" stroke="#ff3b30" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
       </button>
     </div>
   );
@@ -91,75 +141,113 @@ function TaskModal({ isOpen, onClose, task }: { isOpen: boolean; onClose: () => 
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(28,26,23,0.4)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-md p-6 sm:p-8" style={{ background: '#F7F5F0', borderRadius: '2px' }}>
-        <div className="flex items-start justify-between mb-6">
-          <h2 className="font-serif italic text-xl text-[#1C1A17]">
-            {task ? '編輯任務' : '新增任務'}
-          </h2>
-          <button onClick={onClose} className="text-[#8C8680] hover:text-[#1C1A17] font-mono text-sm">✕</button>
-        </div>
+  const inputGroupStyle: React.CSSProperties = {
+    background: 'rgba(118,118,128,0.08)',
+    borderRadius: '12px',
+    border: '1px solid rgba(118,118,128,0.12)',
+    overflow: 'hidden',
+    marginBottom: '12px',
+  };
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs tracking-widest uppercase text-[#8C8680] block mb-1.5">標題</label>
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '13px 16px', background: 'transparent',
+    border: 'none', borderBottom: '1px solid rgba(118,118,128,0.1)',
+    outline: 'none', fontSize: '15px', color: '#1d1d1f', fontFamily: 'inherit',
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      padding: '16px',
+      background: 'rgba(0,0,0,0.3)',
+      backdropFilter: 'blur(8px)',
+    }}>
+      <div style={{ width: '100%', maxWidth: '480px' }}>
+        <div
+          className="glass"
+          style={{ borderRadius: '24px', padding: '28px 28px 32px', marginBottom: '8px' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px' }}>
+              {task ? '編輯任務' : '新增任務'}
+            </h2>
+            <button onClick={onClose} style={{
+              width: '30px', height: '30px', borderRadius: '50%',
+              background: 'rgba(142,142,147,0.15)', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 1L11 11M11 1L1 11" stroke="#6e6e73" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div style={inputGroupStyle}>
             <input value={title} onChange={e => setTitle(e.target.value)} maxLength={100}
-              style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
-              className="w-full px-3 py-2.5 text-sm text-[#1C1A17] focus:outline-none focus:border-[#C45C3A]" />
+              placeholder="任務標題" style={inputStyle} />
+            <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
+              placeholder="備註（選填）"
+              style={{ ...inputStyle, borderBottom: 'none', resize: 'none' as const }} />
           </div>
-          <div>
-            <label className="text-xs tracking-widest uppercase text-[#8C8680] block mb-1.5">備註</label>
-            <textarea value={desc} onChange={e => setDesc(e.target.value)} rows={3}
-              style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
-              className="w-full px-3 py-2.5 text-sm text-[#1C1A17] focus:outline-none focus:border-[#C45C3A] resize-none" />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {(['TODO','IN_PROGRESS','DONE'] as Status[]).map(s => (
-              <button key={s} onClick={() => setStatus(s)}
-                className="py-2 text-xs tracking-wider transition-all"
-                style={{
-                  background: status === s ? '#1C1A17' : '#FFFFFF',
-                  color: status === s ? '#F7F5F0' : '#8C8680',
-                  border: `1px solid ${status === s ? '#1C1A17' : '#E8E4DC'}`,
-                  borderRadius: '2px',
+
+          {/* Status selection */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+            {(['TODO', 'IN_PROGRESS', 'DONE'] as Status[]).map(s => {
+              const pill = STATUS_PILL[s];
+              const active = status === s;
+              return (
+                <button key={s} onClick={() => setStatus(s)} style={{
+                  padding: '10px 4px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                  background: active ? pill.color : 'rgba(142,142,147,0.08)',
+                  color: active ? pill.text : '#aeaeb2',
+                  fontSize: '13px', fontWeight: active ? '600' : '400',
+                  transition: 'all 0.15s', fontFamily: 'inherit',
                 }}>
-                {STATUS_CONFIG[s].label}
-              </button>
-            ))}
+                  {pill.label}
+                </button>
+              );
+            })}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs tracking-widest uppercase text-[#8C8680] block mb-1.5">優先</label>
+
+          {/* Priority + Due date */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(118,118,128,0.08)', borderRadius: '12px', border: '1px solid rgba(118,118,128,0.12)', overflow: 'hidden' }}>
               <select value={priority} onChange={e => setPriority(e.target.value as Priority)}
-                style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
-                className="w-full px-3 py-2.5 text-sm text-[#1C1A17] focus:outline-none">
-                <option value="LOW">低</option>
-                <option value="MEDIUM">中</option>
-                <option value="HIGH">高</option>
+                style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none',
+                  outline: 'none', fontSize: '15px', color: '#1d1d1f', fontFamily: 'inherit', cursor: 'pointer' }}>
+                <option value="LOW">低優先</option>
+                <option value="MEDIUM">中優先</option>
+                <option value="HIGH">高優先</option>
               </select>
             </div>
-            <div>
-              <label className="text-xs tracking-widest uppercase text-[#8C8680] block mb-1.5">截止</label>
+            <div style={{ background: 'rgba(118,118,128,0.08)', borderRadius: '12px', border: '1px solid rgba(118,118,128,0.12)', overflow: 'hidden' }}>
               <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
-                className="w-full px-3 py-2.5 text-sm text-[#1C1A17] focus:outline-none" />
+                style={{ width: '100%', padding: '13px 16px', background: 'transparent', border: 'none',
+                  outline: 'none', fontSize: '15px', color: dueDate ? '#1d1d1f' : '#aeaeb2', fontFamily: 'inherit' }} />
             </div>
           </div>
-        </div>
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose}
-            style={{ border: '1px solid #E8E4DC', borderRadius: '2px' }}
-            className="flex-1 py-2.5 text-xs tracking-widest uppercase text-[#8C8680] hover:border-[#1C1A17] hover:text-[#1C1A17] transition-colors">
-            取消
-          </button>
-          <button onClick={() => save()} disabled={!title.trim() || isPending}
-            style={{ background: '#1C1A17', borderRadius: '2px' }}
-            className="flex-1 py-2.5 text-xs tracking-widest uppercase text-[#F7F5F0] hover:bg-[#C45C3A] transition-colors disabled:opacity-40">
-            {isPending ? '儲存中…' : task ? '更新' : '新增'}
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
+            <button onClick={onClose} style={{
+              padding: '14px', borderRadius: '12px',
+              background: 'rgba(142,142,147,0.12)', border: 'none',
+              fontSize: '15px', fontWeight: '500', color: '#6e6e73',
+              cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              取消
+            </button>
+            <button onClick={() => save()} disabled={!title.trim() || isPending} style={{
+              padding: '14px', borderRadius: '12px',
+              background: !title.trim() || isPending ? 'rgba(0,113,227,0.4)' : 'linear-gradient(180deg, #1a8cff 0%, #0071e3 100%)',
+              border: 'none', fontSize: '15px', fontWeight: '500', color: 'white',
+              cursor: !title.trim() || isPending ? 'default' : 'pointer',
+              boxShadow: !title.trim() || isPending ? 'none' : '0 4px 12px rgba(0,113,227,0.3)',
+              transition: 'all 0.2s', fontFamily: 'inherit',
+            }}>
+              {isPending ? '儲存中…' : task ? '更新' : '新增任務'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -191,94 +279,155 @@ export default function DashboardPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
-  const filtered = filter === 'ALL' ? tasks : tasks.filter(t => t.status === filter);
-
+  const filtered = filter === 'ALL' ? tasks : tasks.filter((t: Task) => t.status === filter);
   const counts = {
     ALL: tasks.length,
-    TODO: tasks.filter(t => t.status === 'TODO').length,
-    IN_PROGRESS: tasks.filter(t => t.status === 'IN_PROGRESS').length,
-    DONE: tasks.filter(t => t.status === 'DONE').length,
+    TODO: tasks.filter((t: Task) => t.status === 'TODO').length,
+    IN_PROGRESS: tasks.filter((t: Task) => t.status === 'IN_PROGRESS').length,
+    DONE: tasks.filter((t: Task) => t.status === 'DONE').length,
   };
 
-  const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+  const today = new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
 
   return (
-    <div style={{ background: '#F7F5F0', minHeight: '100vh' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(160deg, #f0f4ff 0%, #f5f0ff 30%, #fff0f8 60%, #f0fff5 100%)',
+    }}>
+      {/* Background blobs */}
+      <div style={{
+        position: 'fixed', top: '-10%', right: '-5%', width: '600px', height: '600px',
+        background: 'radial-gradient(circle, rgba(0,113,227,0.08) 0%, transparent 70%)',
+        borderRadius: '50%', pointerEvents: 'none', zIndex: 0,
+      }} />
+      <div style={{
+        position: 'fixed', bottom: '-15%', left: '-8%', width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(90,200,250,0.1) 0%, transparent 70%)',
+        borderRadius: '50%', pointerEvents: 'none', zIndex: 0,
+      }} />
 
-      {/* Header */}
-      <header style={{ borderBottom: '1px solid #E8E4DC', background: '#F7F5F0' }}
-        className="sticky top-0 z-10 px-6 md:px-10 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs tracking-[0.25em] uppercase text-[#8C8680] font-mono">TaskFlow</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => { setEditing(null); setModalOpen(true); }}
-            style={{ border: '1px solid #1C1A17', borderRadius: '2px' }}
-            className="px-4 py-1.5 text-xs tracking-[0.15em] uppercase text-[#1C1A17] hover:bg-[#1C1A17] hover:text-[#F7F5F0] transition-colors">
-            + 新增
-          </button>
-          <button onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}
-            className="text-xs text-[#8C8680] hover:text-[#C45C3A] font-mono transition-colors">
-            登出
-          </button>
+      {/* Navbar */}
+      <header
+        className="glass"
+        style={{
+          position: 'sticky', top: 0, zIndex: 40,
+          padding: '0 24px',
+          borderRadius: 0,
+          borderLeft: 'none', borderRight: 'none', borderTop: 'none',
+          borderBottom: '1px solid rgba(255,255,255,0.5)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        }}
+      >
+        <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '28px', height: '28px', borderRadius: '8px',
+              background: 'linear-gradient(135deg, #0071e3, #34aadc)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,113,227,0.3)',
+            }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="2" y="4" width="10" height="2" rx="1" fill="white"/>
+                <rect x="2" y="7" width="7" height="2" rx="1" fill="white" opacity="0.7"/>
+                <rect x="2" y="10" width="9" height="2" rx="1" fill="white" opacity="0.5"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.3px' }}>TaskFlow</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => { setEditing(null); setModalOpen(true); }}
+              style={{
+                padding: '7px 16px', borderRadius: '20px',
+                background: 'linear-gradient(180deg, #1a8cff 0%, #0071e3 100%)',
+                border: 'none', fontSize: '14px', fontWeight: '500', color: 'white',
+                cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,113,227,0.3)',
+                display: 'flex', alignItems: 'center', gap: '5px',
+              }}
+            >
+              <span style={{ fontSize: '16px', lineHeight: 1 }}>+</span> 新增
+            </button>
+            <button
+              onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}
+              style={{ padding: '7px 12px', borderRadius: '20px', background: 'rgba(142,142,147,0.12)',
+                border: 'none', fontSize: '14px', color: '#6e6e73', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              登出
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-10">
+      <main style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px', position: 'relative', zIndex: 1 }}>
 
-        {/* Date heading */}
-        <div className="mb-10">
-          <p className="font-mono text-xs text-[#8C8680] mb-1">{today}</p>
-          <h1 className="font-serif italic text-3xl text-[#1C1A17] font-normal">
-            {counts.IN_PROGRESS > 0
-              ? `${counts.IN_PROGRESS} 件進行中`
-              : counts.TODO > 0 ? `${counts.TODO} 件待處理`
-              : '所有任務完成'}
+        {/* Date + Heading */}
+        <div style={{ marginBottom: '28px' }}>
+          <p style={{ fontSize: '13px', color: '#aeaeb2', marginBottom: '6px' }}>{today}</p>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', lineHeight: 1.2 }}>
+            {counts.IN_PROGRESS > 0 ? `${counts.IN_PROGRESS} 件進行中` :
+             counts.TODO > 0 ? `${counts.TODO} 件待處理` : '全部完成 ✓'}
           </h1>
-          <div className="mt-3 w-8 h-px bg-[#C45C3A]" />
+        </div>
+
+        {/* Stats cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { label: '待處理', count: counts.TODO, color: '#8e8e93', bg: 'rgba(142,142,147,0.1)' },
+            { label: '進行中', count: counts.IN_PROGRESS, color: '#007aff', bg: 'rgba(0,122,255,0.08)' },
+            { label: '已完成', count: counts.DONE, color: '#34c759', bg: 'rgba(52,199,89,0.08)' },
+          ].map(({ label, count, color, bg }) => (
+            <div key={label} className="glass" style={{ borderRadius: '16px', padding: '16px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '28px', fontWeight: '700', color, letterSpacing: '-1px' }}>{count}</div>
+              <div style={{ fontSize: '12px', color: '#aeaeb2', marginTop: '2px' }}>{label}</div>
+            </div>
+          ))}
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-6 mb-8">
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', padding: '4px',
+          background: 'rgba(118,118,128,0.1)', borderRadius: '12px' }}>
           {(['ALL', 'TODO', 'IN_PROGRESS', 'DONE'] as const).map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className="text-xs tracking-widest uppercase transition-colors pb-1"
-              style={{
-                color: filter === s ? '#1C1A17' : '#8C8680',
-                borderBottom: filter === s ? '1px solid #C45C3A' : '1px solid transparent',
-              }}>
-              {s === 'ALL' ? `全部 ${counts.ALL}` :
-               s === 'TODO' ? `未開始 ${counts.TODO}` :
-               s === 'IN_PROGRESS' ? `進行中 ${counts.IN_PROGRESS}` :
-               `完成 ${counts.DONE}`}
+            <button key={s} onClick={() => setFilter(s)} style={{
+              flex: 1, padding: '7px 4px', borderRadius: '9px', border: 'none',
+              background: filter === s ? 'rgba(255,255,255,0.9)' : 'transparent',
+              boxShadow: filter === s ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+              fontSize: '12px', fontWeight: filter === s ? '600' : '400',
+              color: filter === s ? '#1d1d1f' : '#8e8e93', cursor: 'pointer',
+              transition: 'all 0.2s', fontFamily: 'inherit',
+            }}>
+              {s === 'ALL' ? '全部' : s === 'TODO' ? '未開始' : s === 'IN_PROGRESS' ? '進行中' : '完成'}
             </button>
           ))}
         </div>
 
         {/* Task list */}
-        {isLoading ? (
-          <p className="text-sm text-[#8C8680] font-mono">載入中…</p>
-        ) : filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="font-serif italic text-[#8C8680] text-lg">空無一事</p>
-            <p className="text-xs text-[#C8C4BC] mt-2 font-mono">點擊右上角新增任務</p>
-          </div>
-        ) : (
-          <div>
-            {filtered.map(task => (
+        <div className="glass" style={{ borderRadius: '20px', padding: '8px', minHeight: '120px' }}>
+          {isLoading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#aeaeb2', fontSize: '14px' }}>載入中…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>✦</div>
+              <p style={{ fontSize: '16px', color: '#aeaeb2', fontWeight: '500' }}>
+                {filter === 'ALL' ? '尚無任務' : '這裡空空的'}
+              </p>
+              <p style={{ fontSize: '13px', color: '#c7c7cc', marginTop: '4px' }}>
+                點上方「新增」開始規劃
+              </p>
+            </div>
+          ) : (
+            filtered.map((task: Task) => (
               <TaskRow key={task.id} task={task}
                 onEdit={(t) => { setEditing(t); setModalOpen(true); }}
                 onDelete={(id) => removeTask(id)}
                 onStatusChange={(id, status) => changeStatus({ id, status })}
               />
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
 
-        {/* Footer */}
-        <p className="mt-16 text-center text-xs text-[#C8C4BC] font-mono tracking-wider">
-          Claude × Gemini — 2025
+        <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '12px', color: '#c7c7cc' }}>
+          Built with Claude × Gemini · 2026
         </p>
       </main>
 
