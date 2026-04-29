@@ -29,44 +29,104 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ background: '#F7F5F0', minHeight: '100vh' }}
-      className="flex items-center justify-center px-6">
-      <div className="w-full max-w-sm">
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        background: 'linear-gradient(135deg, #f0e8ff 0%, #e8f4fd 35%, #e8fff4 70%, #fde8f0 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      <div style={{
+        position: 'fixed', top: '-15%', right: '-10%', width: '450px', height: '450px',
+        background: 'radial-gradient(circle, rgba(90,200,250,0.15) 0%, transparent 70%)',
+        borderRadius: '50%', pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'fixed', bottom: '-20%', left: '-5%', width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(52,199,89,0.1) 0%, transparent 70%)',
+        borderRadius: '50%', pointerEvents: 'none',
+      }} />
 
-        <div className="mb-12 text-center">
-          <p className="text-xs tracking-[0.25em] uppercase text-[#8C8680] mb-3 font-mono">TaskFlow</p>
-          <h1 className="font-serif text-3xl font-normal text-[#1C1A17] italic">
-            はじめまして
+      <div
+        className="glass"
+        style={{ width: '100%', maxWidth: '380px', borderRadius: '28px', padding: '48px 40px', position: 'relative' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'linear-gradient(135deg, #34c759, #30d158)',
+            margin: '0 auto 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(52,199,89,0.3)',
+          }}>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <path d="M7 14L12 19L21 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px' }}>
+            建立帳號
           </h1>
-          <div className="mt-3 mx-auto w-8 h-px bg-[#C45C3A]" />
+          <p style={{ fontSize: '14px', color: '#6e6e73', marginTop: '4px' }}>
+            開始管理你的任務
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {[
-            { label: '電子郵件', type: 'email', val: email, set: setEmail, ph: 'your@email.com' },
-            { label: '密碼', type: 'password', val: password, set: setPassword, ph: '至少 8 個字元' },
-            { label: '確認密碼', type: 'password', val: confirm, set: setConfirm, ph: '再輸入一次' },
-          ].map(({ label, type, val, set, ph }) => (
-            <div key={label}>
-              <label className="block text-xs tracking-widest uppercase text-[#8C8680] mb-2">{label}</label>
-              <input type={type} value={val} onChange={e => set(e.target.value)} required placeholder={ph}
-                style={{ background: '#FFFFFF', border: '1px solid #E8E4DC', borderRadius: '2px' }}
-                className="w-full px-4 py-3 text-sm text-[#1C1A17] placeholder-[#C8C4BC] focus:outline-none focus:border-[#C45C3A] transition-colors" />
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{
+              background: 'rgba(118,118,128,0.08)',
+              borderRadius: '12px',
+              border: '1px solid rgba(118,118,128,0.12)',
+              overflow: 'hidden',
+            }}>
+              <input
+                type="email" value={email} onChange={e => setEmail(e.target.value)}
+                required placeholder="電子郵件"
+                style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none',
+                  borderBottom: '1px solid rgba(118,118,128,0.12)', outline: 'none', fontSize: '16px', color: '#1d1d1f' }}
+              />
+              <input
+                type="password" value={password} onChange={e => setPassword(e.target.value)}
+                required placeholder="密碼（至少 8 位）"
+                style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none',
+                  borderBottom: '1px solid rgba(118,118,128,0.12)', outline: 'none', fontSize: '16px', color: '#1d1d1f' }}
+              />
+              <input
+                type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+                required placeholder="確認密碼"
+                style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none',
+                  outline: 'none', fontSize: '16px', color: '#1d1d1f' }}
+              />
             </div>
-          ))}
+          </div>
 
-          {error && <p className="text-xs text-[#C45C3A] font-mono">{error}</p>}
+          {error && (
+            <div style={{ padding: '10px 14px', background: 'rgba(255,59,48,0.08)', borderRadius: '10px',
+              marginBottom: '12px', fontSize: '13px', color: '#ff3b30' }}>
+              {error}
+            </div>
+          )}
 
           <button type="submit" disabled={isPending}
-            style={{ background: '#1C1A17', borderRadius: '2px' }}
-            className="w-full py-3 text-xs tracking-[0.2em] uppercase text-[#F7F5F0] hover:bg-[#C45C3A] transition-colors disabled:opacity-40 mt-2">
+            style={{ width: '100%', padding: '14px',
+              background: isPending ? 'rgba(52,199,89,0.6)' : 'linear-gradient(180deg, #3dde6a 0%, #34c759 100%)',
+              border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '500',
+              color: 'white', cursor: isPending ? 'default' : 'pointer',
+              boxShadow: '0 4px 16px rgba(52,199,89,0.35)', transition: 'all 0.2s', marginTop: '4px' }}
+          >
             {isPending ? '建立中…' : '建立帳號'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-[#8C8680] mt-10">
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#6e6e73' }}>
           已有帳號？{' '}
-          <Link href="/login" className="text-[#C45C3A] underline underline-offset-2 hover:no-underline">登入</Link>
+          <Link href="/login" style={{ color: '#0071e3', textDecoration: 'none', fontWeight: '500' }}>
+            登入
+          </Link>
         </p>
       </div>
     </div>
