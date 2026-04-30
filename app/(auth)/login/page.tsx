@@ -14,8 +14,11 @@ export default function LoginPage() {
   const { mutate: login, isPending } = useMutation({
     mutationFn: () => loginUser({ email, password }),
     onSuccess: (data) => {
-      if (data.token) { localStorage.setItem('token', data.token); router.push('/'); }
-      else setError(data.error || '帳號或密碼錯誤');
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('email', email);
+        router.push('/');
+      } else setError(data.error || '帳號或密碼錯誤');
     },
     onError: () => setError('連線失敗，請稍後再試'),
   });
